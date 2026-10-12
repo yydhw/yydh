@@ -1,64 +1,64 @@
-
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <标题>影音导航</标题>
-    <链接 href="./css/all.min.css" rel="样式表">
-    <链接 关系="样式表" 链接地址="css/theme.css">
+    <title>影音导航</title>
+    <link href="./css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/theme.css">
     <script src="./js/particles.min.js"></script>
     
-    <样式>
+    <style>
         /* 顶部导航栏核心样式 */
-        .顶部导航 {
-            位置: 固定;
-            顶部: 0;
-            左: 0;
-            宽度: 100%;
-            背景: rgba(40, 40, 40, 0.95);
-            颜色: #fff;
+        .top-nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background: rgba(40, 40, 40, 0.95);
+            color: #fff;
             padding: 10px 0;
             z-index: 9999;
-            盒模型: 边框盒;
+            box-sizing: border-box;
         }
         
-        .导航容器 {
-            最大宽度: 1200px;
+        .nav-container {
+            max-width: 1200px;
             margin: 0 auto;
-            显示: flex;
+            display: flex;
             justify-content: space-between;
             align-items: center;
-            内边距: 0 15px;
-            宽度: 100%;
+            padding: 0 15px;
+            width: 100%;
         }
         
-        .导航标志 {
-            字体大小: 18px;
+        .nav-logo {
+            font-size: 18px;
             font-weight: bold;
-            颜色: #fff;
+            color: #fff;
             text-decoration: none;
         }
         
-        .导航菜单 {
-            显示: flex;
-            列表样式: 无;
+        .nav-menu {
+            display: flex;
+            list-style: none;
             margin: 0;
-            内边距: 0;
+            padding: 0;
         }
         
-        .导航菜单 列表项 {
+        .nav-menu li {
             margin-left: 20px;
         }
         
-        .导航菜单 列表项 链接 {
-            颜色: #fff;
+        .nav-menu li a {
+            color: #fff;
             text-decoration: none;
-            字体大小: 14px;
-            过渡: 颜色 0.3秒;
+            font-size: 14px;
+            transition: color 0.3s;
         }
         
-        .导航菜单 列表项 链接:悬停 {
-            颜色: #3498db;
+        .nav-menu li a:hover {
+            color: #3498db;
         }
         
         /* 适配手机端 */
@@ -277,12 +277,7 @@
                         "icon": "./icon/wx.ico",
                         "subtitle": "97版共84集"
                     },
-{
-                        name: "中国通史",
-                        subtitle: "100集记录片",
-                        url: "https://www.kunlunce.com/llyj/fl11111111111/2018-07-07/126406.html",
-                        icon: "./icon/jitter.png",
-                    },
+
                 ],
 
              
@@ -527,10 +522,11 @@
 
      <!-- 版权信息（已居中） -->
     <div class="copyright">
-        &copy; 2026 <a href="https://yydhw.pages.dev" rel="nofollow" target="_blank">影音导航</a> &nbsp;|&nbsp; 版权所有
+        &copy; 2026 <a href="https://yydh.de5.net" rel="nofollow" target="_blank">影音导航</a> &nbsp;|&nbsp; 版权所有
     </div>
 
 </body>
 </html>
 
 
+<!--
