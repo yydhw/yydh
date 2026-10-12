@@ -1,64 +1,64 @@
-﻿
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <标题>影音导航</标题>
-    <链接 href="./css/all.min.css" rel="样式表">
-    <链接 关系="样式表" 链接地址="css/theme.css">
+    <title>影音导航</title>
+    <link href="./css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/theme.css">
     <script src="./js/particles.min.js"></script>
     
-    <样式>
+    <style>
         /* 顶部导航栏核心样式 */
-
-            位置：固定
-            顶部：0;
-            左：0;
-            宽度: 100%;
-            背景：rgba(40, 40, 40, 0.95)
-            颜色: #fff;
-            内边距：10px 0;
+        .top-nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background: rgba(40, 40, 40, 0.95);
+            color: #fff;
+            padding: 10px 0;
             z-index: 9999;
             box-sizing: border-box;
         }
         
-
-            最大宽度：1200px;
-            外边距：0 自动；
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            内边距：0 15px;
-            宽度: 100%;
+            padding: 0 15px;
+            width: 100%;
         }
         
-
+        .nav-logo {
             font-size: 18px;
-            字体粗细：粗体；
-            颜色: #fff;
+            font-weight: bold;
+            color: #fff;
             text-decoration: none;
         }
         
-
+        .nav-menu {
             display: flex;
-            列表样式：无
-            外边距：0;
-            内边距：0;
+            list-style: none;
+            margin: 0;
+            padding: 0;
         }
         
         .nav-menu li {
-            左外边距: 20px;
+            margin-left: 20px;
         }
         
         .nav-menu li a {
-            颜色: #fff;
+            color: #fff;
             text-decoration: none;
             font-size: 14px;
-            过渡：颜色 0.3秒；
+            transition: color 0.3s;
         }
         
         .nav-menu li a:hover {
-            颜色: #3498db;
+            color: #3498db;
         }
         
         /* 适配手机端 */
@@ -521,12 +521,11 @@
     </script>
 
      <!-- 版权信息（已居中） -->
-    <div >
-        &copy; 2026  影音导航  &nbsp;|&nbsp; 版权所有
+    <div class="copyright">
+        &copy; 2026 <a href="https://yydhw.pages.dev" rel="nofollow" target="_blank">影音导航</a> &nbsp;|&nbsp; 版权所有
     </div>
 
 </body>
 </html>
-
 
 
