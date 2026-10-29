@@ -1,0 +1,1658 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>影音导航</title>
+    <!-- Font Awesome（图标库，改为 CDN 引用；若服务器上已有 ./css/all.min.css 可改回本地路径） -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="css/theme.css">
+    <!-- 粒子效果库（CDN 引用；若服务器上已有 ./js/particles.min.js 可改回本地路径） -->
+    <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
+
+    <style>
+        /* 顶部导航栏核心样式 */
+        .top-nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background: rgba(40, 40, 40, 0.95);
+            color: #fff;
+            padding: 10px 0;
+            z-index: 9999;
+            box-sizing: border-box;
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 15px;
+            width: 100%;
+        }
+
+        .nav-logo {
+            font-size: 18px;
+            font-weight: bold;
+            color: #fff;
+            text-decoration: none;
+        }
+
+        .nav-menu {
+            display: flex;
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+
+        .nav-menu li {
+            margin-left: 20px;
+        }
+
+        .nav-menu li a {
+            color: #fff;
+            text-decoration: none;
+            font-size: 14px;
+            transition: color 0.3s;
+        }
+
+        .nav-menu li a:hover {
+            color: #3498db;
+        }
+
+        .nav-hide { display: none !important; }
+
+        /* 适配手机端 */
+        @media (max-width: 768px) {
+            .nav-container {
+                padding: 0 10px;
+            }
+            .nav-logo {
+                font-size: 16px;
+            }
+            .nav-menu li {
+                margin-left: 12px;
+            }
+            .nav-menu li a {
+                font-size: 13px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .nav-menu li {
+                margin-left: 8px;
+            }
+            .nav-menu li a {
+                font-size: 12px;
+            }
+        }
+
+        /* 防止内容被导航栏遮挡 */
+        .container {
+            margin-top: 60px !important;
+        }
+
+        /* ========== 版权居中样式（核心；始终位于页面最底部） ========== */
+        .copyright {
+            width: 100%;
+            text-align: center; /* 水平居中 */
+            padding: 15px 0;
+            font-size: 14px;
+            color: #666;
+            background: #fff;
+            margin-top: 30px; /* 与内容拉开间距 */
+            flex-shrink: 0; /* 不被压缩，始终位于最底部 */
+        }
+        .copyright a {
+            color: #666;
+            text-decoration: none;
+        }
+        .copyright a:hover {
+            color: #0066cc;
+        }
+        /* 手机端版权优化 */
+        @media (max-width: 768px) {
+            .copyright {
+                font-size: 12px;
+                padding: 12px 0;
+            }
+        }
+
+        /* ============================================================
+           以下为管理功能新增样式（登录 / 管理面板 / 卡片编辑按钮等）
+           ============================================================ */
+
+        /* 登录状态下：卡片右上角编辑/删除按钮 */
+        .card-tools {
+            position: absolute;
+            top: 6px;
+            right: 6px;
+            display: none;
+            gap: 5px;
+            z-index: 5;
+        }
+        body.is-admin .link-card .card-tools { display: flex; }
+        .card-tools button {
+            width: 24px;
+            height: 24px;
+            border-radius: 7px;
+            border: 1px solid #e3e8ef;
+            background: #fff;
+            color: #7a8899;
+            font-size: 12px;
+            line-height: 1;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s;
+        }
+        .card-tools button:hover { color: #3498db; border-color: #3498db; }
+        .card-tools .ct-del:hover { color: #e74c3c; border-color: #e74c3c; }
+
+        /* 登录状态下：网格末尾的“添加网站”卡片 */
+        .add-site-card {
+            border: 1.5px dashed #b9d4ea;
+            background: rgba(255, 255, 255, 0.65);
+            box-shadow: none;
+            display: none;
+        }
+        body.is-admin .add-site-card { display: block; }
+        .add-site-card:hover { border-color: #3498db; background: #fff; }
+        .add-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 10px;
+            margin: 0 auto 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            color: #3498db;
+            background: #eaf3fb;
+        }
+
+        /* ========== 弹窗通用 ========== */
+        .modal-mask {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.45);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            padding: 20px;
+        }
+        .modal-mask.show { display: flex; }
+        .modal {
+            background: #fff;
+            border-radius: 16px;
+            width: 100%;
+            max-width: 460px;
+            padding: 24px;
+            box-shadow: 0 24px 64px rgba(0, 0, 0, 0.25);
+            animation: popIn 0.25s ease;
+            max-height: 88vh;
+            overflow: auto;
+        }
+        .modal.wide { max-width: 800px; }
+        .modal h3 { font-size: 17px; margin-bottom: 16px; color: #2c3e50; }
+        .form-item { margin-bottom: 14px; }
+        .form-item label { display: block; font-size: 13px; color: #7a8899; margin-bottom: 6px; }
+        .form-item input, .form-item select {
+            width: 100%;
+            height: 40px;
+            border: 1px solid #dfe5ec;
+            border-radius: 10px;
+            padding: 0 12px;
+            font-size: 14px;
+            outline: none;
+            color: #2c3e50;
+            background: #fff;
+        }
+        .form-item input:focus, .form-item select:focus { border-color: #3498db; }
+        .modal-btns { display: flex; gap: 10px; justify-content: flex-end; margin-top: 18px; }
+        .btn {
+            height: 38px;
+            padding: 0 18px;
+            border-radius: 10px;
+            font-size: 14px;
+            border: 1px solid #dfe5ec;
+            background: #fff;
+            color: #2c3e50;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn:hover { border-color: #3498db; color: #3498db; }
+        .btn.primary { background: #3498db; border-color: #3498db; color: #fff; }
+        .btn.primary:hover { background: #2980b9; color: #fff; }
+        .btn.danger { background: #e74c3c; border-color: #e74c3c; color: #fff; }
+        .btn.danger:hover { background: #c0392b; color: #fff; }
+        .btn.sm { height: 28px; padding: 0 10px; font-size: 12px; border-radius: 8px; }
+
+        /* ========== 管理面板 ========== */
+        .admin-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+            border-bottom: 1px solid #edf1f5;
+            padding-bottom: 12px;
+            flex-wrap: wrap;
+        }
+        .admin-tab {
+            padding: 7px 16px;
+            border-radius: 999px;
+            font-size: 13.5px;
+            background: #f2f5f9;
+            color: #5a6b7d;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+        }
+        .admin-tab:hover { color: #3498db; }
+        .admin-tab.active { background: #3498db; color: #fff; }
+        .admin-pane { display: none; }
+        .admin-pane.show { display: block; }
+        .admin-cols { display: grid; grid-template-columns: 1fr 1.5fr; gap: 16px; }
+        @media (max-width: 640px) { .admin-cols { grid-template-columns: 1fr; } }
+        .admin-col h4 {
+            font-size: 14px;
+            color: #2c3e50;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .admin-list {
+            list-style: none;
+            max-height: 320px;
+            overflow: auto;
+            border: 1px solid #edf1f5;
+            border-radius: 10px;
+        }
+        .admin-list li {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 9px 10px;
+            border-bottom: 1px solid #f3f6f9;
+            font-size: 13px;
+            cursor: pointer;
+        }
+        .admin-list li:last-child { border-bottom: none; }
+        .admin-list li:hover { background: #f7fafd; }
+        .admin-list li.sel { background: #eaf3fb; }
+        .admin-list .al-name {
+            flex: 1;
+            min-width: 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            color: #2c3e50;
+            font-weight: 500;
+        }
+        .admin-list .al-sub {
+            flex: 1.2;
+            min-width: 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            color: #98a4b3;
+            font-size: 11.5px;
+            font-weight: 400;
+        }
+        .admin-list .al-ops { display: flex; gap: 4px; flex: none; }
+        .admin-list .al-ops button {
+            border: none;
+            background: none;
+            color: #7a8899;
+            font-size: 12px;
+            cursor: pointer;
+            padding: 2px 5px;
+            border-radius: 6px;
+        }
+        .admin-list .al-ops button:hover { color: #3498db; background: #eaf3fb; }
+        .admin-list .al-ops button.del:hover { color: #e74c3c; background: #fdecea; }
+        .admin-tip { font-size: 12px; color: #98a4b3; margin-top: 10px; line-height: 1.7; }
+        .admin-foot {
+            display: flex;
+            gap: 10px;
+            margin-top: 16px;
+            padding-top: 14px;
+            border-top: 1px solid #edf1f5;
+            flex-wrap: wrap;
+        }
+
+        @keyframes popIn {
+            from { opacity: 0; transform: scale(0.94); }
+            to { opacity: 1; transform: none; }
+        }
+
+        /* ========== Toast 轻提示 ========== */
+        #toast {
+            position: fixed;
+            left: 50%;
+            bottom: 36px;
+            transform: translateX(-50%) translateY(16px);
+            background: #2c3e50;
+            color: #fff;
+            font-size: 13.5px;
+            padding: 10px 20px;
+            border-radius: 999px;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.3s;
+            z-index: 20000;
+            max-width: 80vw;
+        }
+        #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    </style>
+</head>
+<body>
+    <!-- 顶部导航栏 -->
+    <nav class="top-nav">
+        <div class="nav-container">
+            <a href="#" class="nav-logo" id="navLogo">影音导航</a>
+            <ul class="nav-menu" id="navMenu">
+                <!-- 用户菜单项：默认静态兜底，页面加载后由后台数据动态渲染（可在管理后台编辑） -->
+                <li class="nav-user-item"><a href="/">首页</a></li>
+                <li class="nav-user-item"><a href="/">导航</a></li>
+                <li class="nav-user-item"><a href="/jiexi.html">解析</a></li>
+                <li class="nav-user-item"><a href="http://dian.kesug.com">英语</a></li>
+                <!-- 用户菜单项的插入锚点（不可见） -->
+                <li id="navUserAnchor" class="nav-hide"></li>
+                <!-- 刷新按钮（固定功能按钮） -->
+                <li><a href="javascript:void(0)" id="navRefresh" title="刷新页面"><i class="fas fa-rotate-right"></i> 刷新</a></li>
+                <!-- 管理员入口（未登录显示“登录”） -->
+                <li id="navGuestLi"><a href="javascript:void(0)" id="navLogin" title="管理员登录"><i class="fas fa-user-shield"></i> 登录</a></li>
+                <!-- 管理员入口（登录后显示“管理 / 退出”） -->
+                <li id="navManageLi" class="nav-hide"><a href="javascript:void(0)" id="navManage" title="管理后台"><i class="fas fa-gear"></i> 管理</a></li>
+                <li id="navLogoutLi" class="nav-hide"><a href="javascript:void(0)" id="navLogout" title="退出登录"><i class="fas fa-sign-out-alt"></i> 退出</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- 原有页面内容 -->
+    <div class="container">
+        <div id="particles-js"></div> <!-- 粒子效果容器 -->
+
+        <div class="header">
+            <h1 id="pageTitle">影音导航</h1>
+            <div class="search-wrapper" id="search-wrapper">
+                <select id="search-engine">
+                    <!-- 搜索引擎选项由数据动态生成（可在管理后台编辑） -->
+                </select>
+                <input type="text" id="search-input" placeholder="请输入电影关键词...免费看">
+                <button id="search-btn">
+                    <i class="fas fa-search"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="categories" id="category-list">
+            <!-- 分类标签由数据动态生成（可在管理后台编辑） -->
+        </div>
+
+        <div class="links-grid" id="links-container">
+            <!-- 链接将动态插入 -->
+        </div>
+    </div>
+
+    <!-- 版权信息（已居中；年份/文字/链接/后缀均可在后台修改） -->
+    <div class="copyright">
+        &copy; <span id="cpYear">2026</span> <a href="https://yydh.de5.net" id="cpLink" rel="nofollow" target="_blank">影音导航</a> &nbsp;|&nbsp; <span id="cpTail">版权所有</span>
+    </div>
+
+    <!-- ================= 管理员登录弹窗 ================= -->
+    <div class="modal-mask" id="loginMask">
+        <div class="modal" style="max-width: 380px;">
+            <h3><i class="fas fa-user-shield"></i> 管理员登录</h3>
+            <div class="form-item">
+                <label>用户名</label>
+                <input type="text" id="loginUser" placeholder="请输入用户名" autocomplete="username">
+            </div>
+            <div class="form-item">
+                <label>密码</label>
+                <input type="password" id="loginPass" placeholder="请输入密码" autocomplete="current-password">
+            </div>
+            <div class="modal-btns">
+                <button class="btn" id="loginCancel">取消</button>
+                <button class="btn primary" id="loginOk">登录</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= 管理面板弹窗 ================= -->
+    <div class="modal-mask" id="adminMask">
+        <div class="modal wide">
+            <h3><i class="fas fa-gear"></i> 管理后台</h3>
+            <div class="admin-tabs">
+                <button class="admin-tab active" data-tab="tabSite">网站与分类</button>
+                <button class="admin-tab" data-tab="tabNav">站点设置</button>
+                <button class="admin-tab" data-tab="tabEngine">搜索引擎</button>
+                <button class="admin-tab" data-tab="tabPass">修改密码</button>
+            </div>
+
+            <!-- 分页 1：网站与分类 -->
+            <div class="admin-pane show" id="tabSite">
+                <div class="admin-cols">
+                    <div class="admin-col">
+                        <h4>分类栏目
+                            <button class="btn sm primary" id="btnAddCat"><i class="fas fa-plus"></i> 添加分类</button>
+                        </h4>
+                        <ul class="admin-list" id="adminCatList"></ul>
+                    </div>
+                    <div class="admin-col">
+                        <h4>网站链接
+                            <button class="btn sm primary" id="btnAddSite"><i class="fas fa-plus"></i> 添加网站</button>
+                        </h4>
+                        <ul class="admin-list" id="adminSiteList"></ul>
+                    </div>
+                </div>
+                <div class="admin-tip">提示：点击左侧分类可查看/管理该分类下的网站；删除分类会同时删除其下所有网站。</div>
+            </div>
+
+            <!-- 分页 2：站点设置（站点名称 + 版权 + 导航菜单项） -->
+            <div class="admin-pane" id="tabNav">
+                <div class="form-item">
+                    <label>站点名称（同步显示在：浏览器标题、导航条、主页大标题、版权链接）</label>
+                    <div style="display:flex;gap:10px;">
+                        <input type="text" id="siteNameInput" placeholder="影音导航" maxlength="20" style="flex:1;">
+                        <button class="btn primary" id="btnSaveSiteName" style="flex:none;">保存名称</button>
+                    </div>
+                </div>
+
+                <h4 style="font-size:14px;color:#2c3e50;margin:18px 0 10px;">版权信息（页面底部）</h4>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                    <div class="form-item">
+                        <label>年份</label>
+                        <input type="text" id="cpYearInput" placeholder="2026" maxlength="10">
+                    </div>
+                    <div class="form-item">
+                        <label>尾部文字</label>
+                        <input type="text" id="cpTailInput" placeholder="版权所有" maxlength="20">
+                    </div>
+                </div>
+                <div class="form-item">
+                    <label>版权链接地址</label>
+                    <input type="text" id="cpUrlInput" placeholder="https://yydh.de5.net" maxlength="200">
+                </div>
+                <div class="form-item">
+                    <button class="btn primary" id="btnSaveCopyright">保存版权信息</button>
+                </div>
+
+                <h4 style="font-size:14px;color:#2c3e50;margin:18px 0 10px;display:flex;justify-content:space-between;align-items:center;">
+                    导航菜单项（按显示顺序排列）
+                    <button class="btn sm primary" id="btnAddNav"><i class="fas fa-plus"></i> 添加菜单项</button>
+                </h4>
+                <ul class="admin-list" id="adminNavList" style="max-height: 260px;"></ul>
+                <div class="admin-tip">提示：↑ ↓ 可调整菜单项顺序；“刷新 / 登录 / 管理 / 退出”为功能按钮，固定显示在菜单末尾，不在此处编辑。</div>
+            </div>
+
+            <!-- 分页 3：搜索引擎 -->
+            <div class="admin-pane" id="tabEngine">
+                <h4 style="font-size:14px;color:#2c3e50;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;">
+                    搜索引擎列表
+                    <button class="btn sm primary" id="btnAddEngine"><i class="fas fa-plus"></i> 添加搜索引擎</button>
+                </h4>
+                <ul class="admin-list" id="adminEngineList" style="max-height: 340px;"></ul>
+                <div class="admin-tip">提示：地址即搜索前缀，搜索时会自动拼接你输入的关键词，例如 https://www.baidu.com/s?wd=</div>
+            </div>
+
+            <!-- 分页 4：修改密码 -->
+            <div class="admin-pane" id="tabPass">
+                <div style="max-width: 380px;">
+                    <div class="form-item">
+                        <label>原密码</label>
+                        <input type="password" id="oldPass" placeholder="请输入当前密码">
+                    </div>
+                    <div class="form-item">
+                        <label>新密码（至少 4 位）</label>
+                        <input type="password" id="newPass" placeholder="请输入新密码">
+                    </div>
+                    <div class="form-item">
+                        <label>确认新密码</label>
+                        <input type="password" id="newPass2" placeholder="请再次输入新密码">
+                    </div>
+                    <div class="modal-btns">
+                        <button class="btn primary" id="btnChangePass">确认修改</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="admin-foot">
+                <button class="btn sm" id="btnExport"><i class="fas fa-download"></i> 导出数据</button>
+                <button class="btn sm" id="btnImport"><i class="fas fa-upload"></i> 导入数据</button>
+                <button class="btn sm" id="btnRestore"><i class="fas fa-rotate-left"></i> 恢复默认</button>
+                <button class="btn sm" id="btnCloseAdmin" style="margin-left:auto;">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= 网站 添加/编辑 弹窗 ================= -->
+    <div class="modal-mask" id="siteMask">
+        <div class="modal">
+            <h3 id="siteModalTitle">添加网站</h3>
+            <div class="form-item">
+                <label>名称 *</label>
+                <input type="text" id="sfName" placeholder="例如：剧ok" maxlength="20">
+            </div>
+            <div class="form-item">
+                <label>网址 *</label>
+                <input type="text" id="sfUrl" placeholder="https://www.juok.top/" maxlength="200">
+            </div>
+            <div class="form-item">
+                <label>所属分类</label>
+                <select id="sfCat"></select>
+            </div>
+            <div class="form-item">
+                <label>描述（可选）</label>
+                <input type="text" id="sfDesc" placeholder="一句话介绍" maxlength="40">
+            </div>
+            <div class="form-item">
+                <label>图标地址（可选，留空自动使用网站自带图标）</label>
+                <input type="text" id="sfIcon" placeholder="./icon/xxx.ico" maxlength="200">
+            </div>
+            <div class="modal-btns">
+                <button class="btn" id="sfCancel">取消</button>
+                <button class="btn primary" id="sfSave">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= 分类 添加/重命名 弹窗 ================= -->
+    <div class="modal-mask" id="catMask">
+        <div class="modal" style="max-width: 380px;">
+            <h3 id="catModalTitle">添加分类</h3>
+            <div class="form-item">
+                <label>分类名称 *</label>
+                <input type="text" id="cfName" placeholder="例如：在线电影" maxlength="10">
+            </div>
+            <div class="form-item">
+                <label>图标类名（可选）</label>
+                <input type="text" id="cfIcon" placeholder="fas fa-cloud" maxlength="40">
+            </div>
+            <div class="modal-btns">
+                <button class="btn" id="cfCancel">取消</button>
+                <button class="btn primary" id="cfSave">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= 搜索引擎 添加/编辑 弹窗 ================= -->
+    <div class="modal-mask" id="engineMask">
+        <div class="modal" style="max-width: 460px;">
+            <h3 id="engineModalTitle">添加搜索引擎</h3>
+            <div class="form-item">
+                <label>名称 *</label>
+                <input type="text" id="efName" placeholder="例如：百度" maxlength="10">
+            </div>
+            <div class="form-item">
+                <label>搜索地址（前缀）*</label>
+                <input type="text" id="efUrl" placeholder="https://www.baidu.com/s?wd=" maxlength="200">
+            </div>
+            <div class="modal-btns">
+                <button class="btn" id="efCancel">取消</button>
+                <button class="btn primary" id="efSave">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= 导航菜单项 添加/编辑 弹窗 ================= -->
+    <div class="modal-mask" id="navMask">
+        <div class="modal" style="max-width: 420px;">
+            <h3 id="navModalTitle">添加菜单项</h3>
+            <div class="form-item">
+                <label>名称 *</label>
+                <input type="text" id="nfName" placeholder="例如：解析" maxlength="10">
+            </div>
+            <div class="form-item">
+                <label>网址 *（支持站内相对地址，如 /jiexi.html）</label>
+                <input type="text" id="nfUrl" placeholder="/jiexi.html 或 https://..." maxlength="200">
+            </div>
+            <div class="modal-btns">
+                <button class="btn" id="nfCancel">取消</button>
+                <button class="btn primary" id="nfSave">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <input type="file" id="importFile" accept=".json,application/json" style="display:none">
+    <div id="toast"></div>
+
+    <!-- ================= 粒子效果脚本（配置与原页面一致） ================= -->
+    <script>
+        window.onload = function () {
+            if (typeof particlesJS !== "function") return; // 粒子库加载失败时静默跳过
+            particlesJS('particles-js', {
+                particles: {
+                    number: {value: 150, density: {enable: true, value_area: 1200}},
+                    color: {value: '#3498db'},
+                    shape: {
+                        type: 'circle',
+                        stroke: {width: 0, color: '#000000'},
+                        image: {src: '', width: 100, height: 100}
+                    },
+                    opacity: {
+                        value: 0.7,
+                        random: true,
+                        anim: {enable: true, speed: 2, opacity_min: 0.3, sync: false}
+                    },
+                    size: {value: 3, random: true, anim: {enable: true, speed: 3, size_min: 0.5, sync: false}},
+                    line_linked: {
+                        enable: true,
+                        distance: 150,
+                        color: '#3498db',
+                        opacity: 0.6,
+                        width: 1
+                    },
+                    move: {
+                        enable: true,
+                        speed: 2,
+                        direction: 'none',
+                        random: true,
+                        straight: false,
+                        out_mode: 'out',
+                        bounce: false,
+                        attract: {
+                            enable: true,
+                            rotateX: 600,
+                            rotateY: 1200
+                        }
+                    }
+                },
+                interactivity: {
+                    detect_on: 'canvas',
+                    events: {
+                        onhover: {
+                            enable: true,
+                            mode: ['bubble', 'attract']
+                        },
+                        onclick: {enable: true, mode: 'repulse'},
+                        resize: true
+                    },
+                    modes: {
+                        attract: {
+                            distance: 200,
+                            speed: 3
+                        },
+                        bubble: {
+                            distance: 400,
+                            size: 10,
+                            duration: 2,
+                            opacity: 0.8,
+                            speed: 3
+                        },
+                        repulse: {
+                            distance: 200,
+                            duration: 0.4
+                        }
+                    }
+                },
+                retina_detect: true
+            });
+        };
+    </script>
+
+    <!-- ================= 数据、渲染与管理功能脚本 ================= -->
+    <script>
+        (function () {
+            "use strict";
+
+            var DATA_KEY = "yingyin_nav_data_v1";
+            var ADMIN_KEY = "yingyin_nav_admin";
+            var LOGIN_KEY = "yingyin_nav_login";
+
+            /* 图标加载失败时的兜底占位图（与原页面一致） */
+            var FALLBACK_ICON = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="%239ca3af" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="9" y1="9" x2="15" y2="15"></line><line x1="15" y1="9" x2="9" y2="15"></line></svg>';
+
+            /* ---------- 默认数据（与原页面内容完全一致） ---------- */
+            function defaultData() {
+                return {
+                    site: {
+                        name: "影音导航",
+                        copyright: {
+                            year: "2026",
+                            url: "https://yydh.de5.net",
+                            tail: "版权所有"
+                        }
+                    },
+                    nav: {
+                        items: [
+                            { name: "首页", url: "/" },
+                            { name: "导航", url: "/" },
+                            { name: "解析", url: "/jiexi.html" },
+                            { name: "英语", url: "http://dian.kesug.com" }
+                        ]
+                    },
+                    engines: [
+                        { name: "电影", url: "https://zhaoju1.com/session/new?utm_source=ywn&prompt=" },
+                        { name: "AI搜", url: "https://dongpian1.com/session/new?utm_source=ywn&prompt=" },
+                        { name: "百度", url: "https://www.baidu.com/s?wd=" }
+                    ],
+                    categories: [
+                        {
+                            id: "cat_common", name: "常用", icon: "fas fa-star", sites: [
+                                { name: "新闻周刊", subtitle: "一周国内大事热点", url: "https://tv.cctv.com/lm/xwzk/tongyong/index.shtml", icon: "./icon/youtube.ico" },
+                                { name: "今天说法", subtitle: "记录中国法治进程", url: "https://tv.cctv.com/lm/jrsf/index.shtml", icon: "./icon/jitter.png" },
+                                { name: "世界周刊", subtitle: "一周全球大事热点", url: "https://tv.cctv.com/lm/sjzk/index.shtml", icon: "./icon/proton.ico" },
+                                { name: "三国演义", subtitle: "97版共84集", url: "http://tv.cctv.com/v/vd/VIDA1355904363986430.html", icon: "./icon/wx.ico" },
+                                { name: "中国通史", subtitle: "100集记录片", url: "https://www.kunlunce.com/llyj/fl11111111111/2018-07-07/126406.html", icon: "./icon/jitter.png" },
+                                { name: "肥志百科", subtitle: "有趣有料", url: "https://dmxq0.com/voddetail/154379.html", icon: "./icon/proton.ico" }
+                            ]
+                        },
+                        {
+                            id: "cat_parse", name: "电影解析", icon: "fas fa-blog", sites: [
+                                { name: "vip电影解析", url: "https://go.88lin.eu.org/vip/", icon: "./icon/liandi.png", subtitle: "按名称或视频地址解析看" },
+                                { name: "海搜", url: "https://haisou.cc/", icon: "./icon/liandi.png", subtitle: "网盘搜索含UC" }
+                            ]
+                        },
+                        {
+                            id: "cat_movie", name: "在线电影", icon: "fas fa-cloud", sites: [
+                                { name: "剧ok", subtitle: "在线免费看", url: "https://www.juok.top/", icon: "./icon/ali_cloud.ico" },
+                                { name: "注视影视", subtitle: "在线免费看", url: "https://gazes.site/", icon: "./icon/qiniu.ico" },
+                                { name: "真狼影视", subtitle: "在线免费看", url: "https://www.zhenlang.org/", icon: "./icon/jianguoyun.ico" },
+                                { name: "NO视频", subtitle: "在线免费看", url: "https://www.novipnoad.us/", icon: "./icon/bitiful.ico" }
+                            ]
+                        },
+                        {
+                            id: "cat_tool", name: "在线工具", icon: "fas fa-tools", sites: [
+                                { name: "效率坊", subtitle: "视频去水印下载", url: "https://www.xiaolvfang.com/", icon: "./icon/tuguaishou.png" },
+                                { name: "文库下载", subtitle: "在线免费下载为pdf", url: "https://www.ziliaoku.xyz/", icon: "./icon/lanzou.ico" },
+                                { name: "PDF派", subtitle: "在线PDF免费转其他", url: "https://www.pdfpai.com/", icon: "./icon/tuguaishou.png" },
+                                { name: "在线PDF", subtitle: "合并编辑等", url: "https://pdfcraft.devtoolcafe.com/zh/", icon: "./icon/snapmail.ico" },
+                                { name: "影音转链接", url: "https://www.videotourl.com/zh", subtitle: "音频视频转换成链接", icon: "./icon/lanzou.ico" },
+                                { name: "蓝奏云", url: "https://www.lanzou.com/", subtitle: "免费存储100M内文件", icon: "./icon/lanzou.ico" }
+                            ]
+                        },
+                        {
+                            id: "cat_music", name: "音乐电台", icon: "fas fa-robot", sites: [
+                                { name: "听友FM", subtitle: "vip小说故事 免费在线听", url: "https://www.tingyou.fm/", icon: "./icon/tongyi.svg" },
+                                { name: "CCTV直播", subtitle: "央视在线直播  可回看", url: "https://tv.cctv.com/live/", icon: "./icon/youtube.ico" },
+                                { name: "电台电视", subtitle: "网络电台，卫视直播", url: "https://radio5.cn/", icon: "./icon/kimi.ico" },
+                                { name: "闪闪音乐", subtitle: "音乐试听下载", url: "https://www.33ve.com/", icon: "./icon/tongyi.svg" }
+                            ]
+                        },
+                        {
+                            id: "cat_life", name: "茶余饭后", icon: "fas fa-person-walking", sites: [
+                                { name: "新闻周刊", subtitle: "一周国内大事热点", url: "https://tv.cctv.com/lm/xwzk/tongyong/index.shtml", icon: "./icon/youtube.ico" },
+                                { name: "今天说法", subtitle: "记录中国法治进程", url: "https://tv.cctv.com/lm/jrsf/index.shtml", icon: "./icon/jitter.png" },
+                                { name: "世界周刊", subtitle: "一周全球大事热点", url: "https://tv.cctv.com/lm/sjzk/index.shtml", icon: "./icon/proton.ico" },
+                                { name: "CCTV直播", subtitle: "央视电视直播", url: "https://tv.cctv.com/live/", icon: "./icon/youtube.ico" },
+                                { name: "中国通史", subtitle: "100集记录片", url: "https://www.kunlunce.com/llyj/fl11111111111/2018-07-07/126406.html", icon: "./icon/jitter.png" },
+                                { name: "肥志百科", subtitle: "有趣有料", url: "https://dmxq0.com/voddetail/154379.html", icon: "./icon/proton.ico" }
+                            ]
+                        }
+                    ]
+                };
+            }
+
+            /* ---------- 工具函数 ---------- */
+            function $(id) { return document.getElementById(id); }
+
+            function esc(s) {
+                return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+                    return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+                });
+            }
+
+            function uid(prefix) {
+                return (prefix || "id") + "_" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+            }
+
+            function normUrl(u) {
+                u = (u || "").trim();
+                if (!u) return "";
+                if (!/^https?:\/\//i.test(u)) u = "https://" + u;
+                return u;
+            }
+
+            var toastTimer = null;
+            function toast(msg) {
+                var t = $("toast");
+                t.textContent = msg;
+                t.classList.add("show");
+                clearTimeout(toastTimer);
+                toastTimer = setTimeout(function () { t.classList.remove("show"); }, 2200);
+            }
+
+            /* 轻量密码散列（静态本地页面用的防明文措施，非服务级安全） */
+            function hashPass(p) {
+                var h = 5381, i;
+                for (i = 0; i < p.length; i++) {
+                    h = (((h << 5) + h) ^ p.charCodeAt(i)) & 0x7fffffff;
+                }
+                return "h1_" + h.toString(36);
+            }
+
+            /* ---------- 数据读写 ---------- */
+            function loadData() {
+                try {
+                    var raw = localStorage.getItem(DATA_KEY);
+                    if (raw) {
+                        var d = JSON.parse(raw);
+                        if (d && Array.isArray(d.engines) && Array.isArray(d.categories) && d.categories.length) {
+                            d.categories.forEach(function (c) {
+                                if (!Array.isArray(c.sites)) c.sites = [];
+                            });
+                            /* 兼容旧版本数据：无 nav 字段时自动补齐默认导航配置 */
+                            if (!d.nav || typeof d.nav !== "object") {
+                                d.nav = { items: defaultData().nav.items };
+                            }
+                            if (!Array.isArray(d.nav.items)) {
+                                d.nav.items = defaultData().nav.items;
+                            }
+                            /* 兼容旧版本数据：无 site 字段时补齐；沿用旧版（nav.logo）自定义过的名称 */
+                            var oldLogo = (d.nav && d.nav.logo) || ""; /* 旧版导航条名称字段，已废弃，读取后清理 */
+                            if (!d.site || typeof d.site !== "object") {
+                                d.site = {};
+                            }
+                            if (!d.site.name) {
+                                d.site.name = oldLogo || defaultData().site.name;
+                            }
+                            if (!d.site.copyright || typeof d.site.copyright !== "object") {
+                                d.site.copyright = defaultData().site.copyright;
+                            }
+                            delete d.nav.logo;
+                            /* 迁移结果写回本地存储，避免废弃字段残留 */
+                            try { localStorage.setItem(DATA_KEY, JSON.stringify(d)); } catch (e) {}
+                            return d;
+                        }
+                    }
+                } catch (e) { /* 数据损坏则回退默认 */ }
+                var def = defaultData();
+                try { localStorage.setItem(DATA_KEY, JSON.stringify(def)); } catch (e) {}
+                return def;
+            }
+
+            function saveData() {
+                try {
+                    localStorage.setItem(DATA_KEY, JSON.stringify(data));
+                } catch (e) {
+                    toast("保存失败：本地存储空间不足");
+                }
+            }
+
+            function loadAdmin() {
+                try {
+                    var a = JSON.parse(localStorage.getItem(ADMIN_KEY));
+                    if (a && a.user && a.pass) return a;
+                } catch (e) {}
+                var a = { user: "admin", pass: hashPass("admin302") };
+                try { localStorage.setItem(ADMIN_KEY, JSON.stringify(a)); } catch (e) {}
+                return a;
+            }
+
+            var data = loadData();
+            var admin = loadAdmin();
+            var loggedIn = localStorage.getItem(LOGIN_KEY) === "1";
+            var currentCat = data.categories.length ? data.categories[0].id : null;
+            var adminSelCat = currentCat;
+
+            function getCat(id) {
+                for (var i = 0; i < data.categories.length; i++) {
+                    if (data.categories[i].id === id) return data.categories[i];
+                }
+                return null;
+            }
+
+            /* ---------- 主页渲染 ---------- */
+            function renderEngines() {
+                var sel = $("search-engine");
+                sel.innerHTML = "";
+                data.engines.forEach(function (en) {
+                    var op = document.createElement("option");
+                    op.value = en.url;
+                    op.textContent = en.name;
+                    sel.appendChild(op);
+                });
+            }
+
+            function renderCategories() {
+                var box = $("category-list");
+                box.innerHTML = "";
+                data.categories.forEach(function (cat) {
+                    var tag = document.createElement("div");
+                    tag.className = "category-tag" + (cat.id === currentCat ? " active" : "");
+                    tag.setAttribute("data-catid", cat.id);
+                    tag.setAttribute("data-category", cat.name);
+                    tag.innerHTML = '<i class="' + esc(cat.icon || "fas fa-link") + '"></i> ' + esc(cat.name);
+                    box.appendChild(tag);
+                });
+            }
+
+            /* ---------- 站点信息渲染（名称同步 4 处 + 版权） ---------- */
+            function renderSite() {
+                var name = data.site.name || "影音导航";
+                /* 站点名称出现的 4 个位置：浏览器标题、导航条、主页大标题、版权链接文字 */
+                document.title = name;
+                $("navLogo").textContent = name;
+                $("pageTitle").textContent = name;
+                /* 版权信息 */
+                var cp = data.site.copyright || {};
+                $("cpYear").textContent = cp.year || "";
+                $("cpTail").textContent = cp.tail || "";
+                var cpLink = $("cpLink");
+                cpLink.textContent = name;
+                cpLink.href = cp.url || "#";
+            }
+
+            /* ---------- 顶部导航渲染（用户菜单项） ---------- */
+            function renderNav() {
+                /* 用户菜单项：先清除旧的，再按数据顺序插入到功能按钮之前 */
+                var menu = $("navMenu");
+                var anchor = $("navUserAnchor");
+                var old = menu.querySelectorAll("li.nav-user-item");
+                for (var i = 0; i < old.length; i++) {
+                    menu.removeChild(old[i]);
+                }
+                (data.nav.items || []).forEach(function (item) {
+                    var li = document.createElement("li");
+                    li.className = "nav-user-item";
+                    var a = document.createElement("a");
+                    a.href = item.url || "#";
+                    a.textContent = item.name || "";
+                    li.appendChild(a);
+                    menu.insertBefore(li, anchor);
+                });
+            }
+
+            function renderSites() {
+                var box = $("links-container");
+                box.innerHTML = "";
+                var cat = getCat(currentCat);
+                if (!cat) return;
+
+                cat.sites.forEach(function (site, idx) {
+                    var card = document.createElement("div");
+                    card.className = "link-card";
+
+                    var img = document.createElement("img");
+                    img.src = site.icon || "";
+                    img.alt = site.name;
+                    img.onerror = function () { this.onerror = null; this.src = FALLBACK_ICON; };
+
+                    var a = document.createElement("a");
+                    a.href = site.url;
+                    a.target = "_blank";
+                    a.textContent = site.name;
+
+                    var sub = document.createElement("div");
+                    sub.className = "site-subtitle";
+                    sub.textContent = site.subtitle || "";
+
+                    card.appendChild(img);
+                    card.appendChild(a);
+                    card.appendChild(sub);
+
+                    if (loggedIn) {
+                        var tools = document.createElement("div");
+                        tools.className = "card-tools";
+                        tools.innerHTML = '<button class="ct-edit" title="编辑">✎</button><button class="ct-del" title="删除">✕</button>';
+                        tools.querySelector(".ct-edit").addEventListener("click", function (ev) {
+                            ev.stopPropagation();
+                            openSiteModal(cat.id, idx);
+                        });
+                        tools.querySelector(".ct-del").addEventListener("click", function (ev) {
+                            ev.stopPropagation();
+                            deleteSite(cat.id, idx);
+                        });
+                        card.appendChild(tools);
+                    }
+
+                    /* 点击卡片空白处也可打开链接；点击名称链接本身则交给默认跳转，避免重复开页 */
+                    card.addEventListener("click", function (ev) {
+                        if (ev.target.closest("a") || ev.target.closest("button")) return;
+                        window.open(site.url, "_blank");
+                    });
+
+                    box.appendChild(card);
+                });
+
+                if (loggedIn) {
+                    var add = document.createElement("div");
+                    add.className = "link-card add-site-card";
+                    add.innerHTML = '<div class="add-icon">＋</div><a href="javascript:void(0)">添加网站</a><div class="site-subtitle">到「' + esc(cat.name) + '」分类</div>';
+                    add.addEventListener("click", function () { openSiteModal(cat.id, -1); });
+                    box.appendChild(add);
+                }
+            }
+
+            function renderAll() {
+                renderEngines();
+                renderSite();
+                renderNav();
+                renderCategories();
+                renderSites();
+            }
+
+            /* ---------- 登录状态 ---------- */
+            function refreshLoginUI() {
+                document.body.classList.toggle("is-admin", loggedIn);
+                $("navGuestLi").classList.toggle("nav-hide", loggedIn);
+                $("navManageLi").classList.toggle("nav-hide", !loggedIn);
+                $("navLogoutLi").classList.toggle("nav-hide", !loggedIn);
+            }
+
+            function doLogin() {
+                var u = $("loginUser").value.trim();
+                var p = $("loginPass").value;
+                if (u === admin.user && hashPass(p) === admin.pass) {
+                    loggedIn = true;
+                    try { localStorage.setItem(LOGIN_KEY, "1"); } catch (e) {}
+                    refreshLoginUI();
+                    renderSites();
+                    closeModal($("loginMask"));
+                    $("loginPass").value = "";
+                    toast("登录成功，已进入管理模式");
+                } else {
+                    toast("用户名或密码错误");
+                }
+            }
+
+            function doLogout() {
+                loggedIn = false;
+                try { localStorage.removeItem(LOGIN_KEY); } catch (e) {}
+                refreshLoginUI();
+                renderSites();
+                closeModal($("adminMask"));
+                toast("已退出登录");
+            }
+
+            /* ---------- 弹窗控制 ---------- */
+            function openModal(mask) { mask.classList.add("show"); }
+            function closeModal(mask) { mask.classList.remove("show"); }
+
+            document.querySelectorAll(".modal-mask").forEach(function (mask) {
+                mask.addEventListener("click", function (ev) {
+                    if (ev.target === mask) closeModal(mask);
+                });
+            });
+
+            /* ---------- 网站 添加/编辑 ---------- */
+            var siteEditing = null; // { catId, index } ，index 为 -1 表示新增
+
+            function openSiteModal(catId, index) {
+                siteEditing = { catId: catId, index: index };
+                var sel = $("sfCat");
+                sel.innerHTML = "";
+                data.categories.forEach(function (c) {
+                    var op = document.createElement("option");
+                    op.value = c.id;
+                    op.textContent = c.name;
+                    sel.appendChild(op);
+                });
+                if (index >= 0) {
+                    var cat = getCat(catId);
+                    var site = cat && cat.sites[index];
+                    if (!site) return;
+                    $("siteModalTitle").textContent = "编辑网站";
+                    $("sfName").value = site.name || "";
+                    $("sfUrl").value = site.url || "";
+                    $("sfDesc").value = site.subtitle || "";
+                    $("sfIcon").value = site.icon || "";
+                    sel.value = catId;
+                } else {
+                    $("siteModalTitle").textContent = "添加网站";
+                    $("sfName").value = "";
+                    $("sfUrl").value = "";
+                    $("sfDesc").value = "";
+                    $("sfIcon").value = "";
+                    sel.value = catId;
+                }
+                openModal($("siteMask"));
+                setTimeout(function () { $("sfName").focus(); }, 50);
+            }
+
+            function saveSite() {
+                var name = $("sfName").value.trim();
+                var url = normUrl($("sfUrl").value);
+                var catId = $("sfCat").value;
+                if (!name) { toast("请填写网站名称"); return; }
+                if (!url) { toast("请填写网站网址"); return; }
+                var cat = getCat(catId);
+                if (!cat) { toast("所选分类不存在"); return; }
+
+                var site = {
+                    name: name,
+                    url: url,
+                    subtitle: $("sfDesc").value.trim(),
+                    icon: $("sfIcon").value.trim()
+                };
+                if (siteEditing.index >= 0) {
+                    var oldCat = getCat(siteEditing.catId);
+                    if (oldCat && oldCat.sites[siteEditing.index]) {
+                        if (siteEditing.catId === catId) {
+                            /* 分类未变：原地更新 */
+                            oldCat.sites[siteEditing.index] = site;
+                        } else {
+                            /* 分类已变：从旧分类移除，加入新分类 */
+                            oldCat.sites.splice(siteEditing.index, 1);
+                            cat.sites.push(site);
+                        }
+                    }
+                } else {
+                    cat.sites.push(site);
+                }
+                saveData();
+                currentCat = catId;
+                adminSelCat = catId;
+                renderAll();
+                renderAdminLists();
+                closeModal($("siteMask"));
+                toast(siteEditing.index >= 0 ? "网站已更新" : "网站已添加");
+                siteEditing = null;
+            }
+
+            function deleteSite(catId, index) {
+                var cat = getCat(catId);
+                if (!cat || !cat.sites[index]) return;
+                var name = cat.sites[index].name;
+                if (!confirm('确定删除网站「' + name + '」吗？')) return;
+                cat.sites.splice(index, 1);
+                saveData();
+                renderSites();
+                renderAdminLists();
+                toast("已删除「" + name + "」");
+            }
+
+            /* ---------- 分类 添加/重命名 ---------- */
+            var catEditing = null; // { id } ，为空表示新增
+
+            function openCatModal(id) {
+                catEditing = id ? { id: id } : null;
+                if (id) {
+                    var cat = getCat(id);
+                    if (!cat) return;
+                    $("catModalTitle").textContent = "重命名分类";
+                    $("cfName").value = cat.name;
+                    $("cfIcon").value = cat.icon || "";
+                } else {
+                    $("catModalTitle").textContent = "添加分类";
+                    $("cfName").value = "";
+                    $("cfIcon").value = "";
+                }
+                openModal($("catMask"));
+                setTimeout(function () { $("cfName").focus(); }, 50);
+            }
+
+            function saveCat() {
+                var name = $("cfName").value.trim();
+                if (!name) { toast("请填写分类名称"); return; }
+                var icon = $("cfIcon").value.trim();
+                if (catEditing) {
+                    var cat = getCat(catEditing.id);
+                    if (cat) {
+                        cat.name = name;
+                        cat.icon = icon;
+                    }
+                    toast("分类已更新");
+                } else {
+                    var newCat = { id: uid("cat"), name: name, icon: icon, sites: [] };
+                    data.categories.push(newCat);
+                    currentCat = newCat.id;
+                    adminSelCat = newCat.id;
+                    toast("分类已添加");
+                }
+                saveData();
+                renderAll();
+                renderAdminLists();
+                closeModal($("catMask"));
+                catEditing = null;
+            }
+
+            function deleteCat(id) {
+                var cat = getCat(id);
+                if (!cat) return;
+                if (data.categories.length <= 1) { toast("至少保留一个分类"); return; }
+                if (!confirm('确定删除分类「' + cat.name + '」及其下 ' + cat.sites.length + ' 个网站吗？')) return;
+                var idx = data.categories.indexOf(cat);
+                data.categories.splice(idx, 1);
+                if (currentCat === id) {
+                    currentCat = data.categories[Math.max(0, idx - 1)].id;
+                    adminSelCat = currentCat;
+                }
+                saveData();
+                renderAll();
+                renderAdminLists();
+                toast("已删除分类「" + cat.name + "」");
+            }
+
+            /* ---------- 搜索引擎 添加/编辑 ---------- */
+            var engineEditing = -1; // 索引，-1 表示新增
+
+            function openEngineModal(index) {
+                engineEditing = index;
+                if (index >= 0 && data.engines[index]) {
+                    $("engineModalTitle").textContent = "编辑搜索引擎";
+                    $("efName").value = data.engines[index].name;
+                    $("efUrl").value = data.engines[index].url;
+                } else {
+                    $("engineModalTitle").textContent = "添加搜索引擎";
+                    $("efName").value = "";
+                    $("efUrl").value = "";
+                }
+                openModal($("engineMask"));
+                setTimeout(function () { $("efName").focus(); }, 50);
+            }
+
+            function saveEngine() {
+                var name = $("efName").value.trim();
+                var url = $("efUrl").value.trim();
+                if (!name) { toast("请填写搜索引擎名称"); return; }
+                if (!url) { toast("请填写搜索地址"); return; }
+                if (engineEditing >= 0) {
+                    data.engines[engineEditing].name = name;
+                    data.engines[engineEditing].url = url;
+                    toast("搜索引擎已更新");
+                } else {
+                    data.engines.push({ name: name, url: url });
+                    toast("搜索引擎已添加");
+                }
+                saveData();
+                renderEngines();
+                renderAdminLists();
+                closeModal($("engineMask"));
+                engineEditing = -1;
+            }
+
+            function deleteEngine(index) {
+                if (!data.engines[index]) return;
+                if (data.engines.length <= 1) { toast("至少保留一个搜索引擎"); return; }
+                if (!confirm('确定删除搜索引擎「' + data.engines[index].name + '」吗？')) return;
+                data.engines.splice(index, 1);
+                saveData();
+                renderEngines();
+                renderAdminLists();
+                toast("搜索引擎已删除");
+            }
+
+            /* ---------- 顶部导航：站点名称与菜单项管理 ---------- */
+            var navEditing = -1; // 菜单项索引，-1 表示新增
+
+            function openNavModal(index) {
+                navEditing = index;
+                if (index >= 0 && data.nav.items[index]) {
+                    $("navModalTitle").textContent = "编辑菜单项";
+                    $("nfName").value = data.nav.items[index].name;
+                    $("nfUrl").value = data.nav.items[index].url;
+                } else {
+                    $("navModalTitle").textContent = "添加菜单项";
+                    $("nfName").value = "";
+                    $("nfUrl").value = "";
+                }
+                openModal($("navMask"));
+                setTimeout(function () { $("nfName").focus(); }, 50);
+            }
+
+            function saveNavItem() {
+                var name = $("nfName").value.trim();
+                var url = $("nfUrl").value.trim();
+                if (!name) { toast("请填写菜单名称"); return; }
+                if (!url) { toast("请填写菜单网址"); return; }
+                if (navEditing >= 0 && data.nav.items[navEditing]) {
+                    data.nav.items[navEditing].name = name;
+                    data.nav.items[navEditing].url = url;
+                    toast("菜单项已更新");
+                } else {
+                    data.nav.items.push({ name: name, url: url });
+                    toast("菜单项已添加");
+                }
+                saveData();
+                renderNav();
+                renderAdminSite();
+                closeModal($("navMask"));
+                navEditing = -1;
+            }
+
+            function deleteNavItem(index) {
+                if (!data.nav.items[index]) return;
+                if (!confirm('确定删除菜单项「' + data.nav.items[index].name + '」吗？')) return;
+                data.nav.items.splice(index, 1);
+                saveData();
+                renderNav();
+                renderAdminSite();
+                toast("菜单项已删除");
+            }
+
+            /* dir: -1 上移，1 下移 */
+            function moveNavItem(index, dir) {
+                var arr = data.nav.items;
+                var target = index + dir;
+                if (target < 0 || target >= arr.length) return;
+                var tmp = arr[index];
+                arr[index] = arr[target];
+                arr[target] = tmp;
+                saveData();
+                renderNav();
+                renderAdminSite();
+            }
+
+            function saveSiteName() {
+                var name = $("siteNameInput").value.trim();
+                if (!name) { toast("站点名称不能为空"); return; }
+                data.site.name = name;
+                saveData();
+                renderSite();
+                toast("站点名称已保存");
+            }
+
+            function saveCopyright() {
+                data.site.copyright = {
+                    year: $("cpYearInput").value.trim(),
+                    url: $("cpUrlInput").value.trim(),
+                    tail: $("cpTailInput").value.trim()
+                };
+                saveData();
+                renderSite();
+                toast("版权信息已保存");
+            }
+
+            /* ---------- 管理面板渲染 ---------- */
+            function renderAdminCats() {
+                var ul = $("adminCatList");
+                ul.innerHTML = "";
+                data.categories.forEach(function (cat) {
+                    var li = document.createElement("li");
+                    if (cat.id === adminSelCat) li.classList.add("sel");
+                    li.innerHTML =
+                        '<i class="' + esc(cat.icon || "fas fa-link") + '" style="color:#3498db;flex:none;"></i>' +
+                        '<span class="al-name">' + esc(cat.name) + '</span>' +
+                        '<span class="al-sub">' + cat.sites.length + ' 个网站</span>' +
+                        '<span class="al-ops">' +
+                        '<button data-op="rename" title="重命名">✎</button>' +
+                        '<button data-op="del" class="del" title="删除">✕</button>' +
+                        '</span>';
+                    li.addEventListener("click", function (ev) {
+                        var btn = ev.target.closest("button");
+                        if (btn) {
+                            ev.stopPropagation();
+                            if (btn.dataset.op === "rename") openCatModal(cat.id);
+                            else deleteCat(cat.id);
+                            return;
+                        }
+                        adminSelCat = cat.id;
+                        renderAdminLists();
+                    });
+                    ul.appendChild(li);
+                });
+            }
+
+            function renderAdminSites() {
+                var ul = $("adminSiteList");
+                ul.innerHTML = "";
+                var cat = getCat(adminSelCat) || data.categories[0];
+                if (!cat) { ul.innerHTML = '<li><span class="al-name">暂无分类</span></li>'; return; }
+                cat.sites.forEach(function (site, idx) {
+                    var li = document.createElement("li");
+                    li.innerHTML =
+                        '<span class="al-name">' + esc(site.name) + '</span>' +
+                        '<span class="al-sub">' + esc(site.url) + '</span>' +
+                        '<span class="al-ops">' +
+                        '<button data-op="edit" title="编辑">✎</button>' +
+                        '<button data-op="del" class="del" title="删除">✕</button>' +
+                        '</span>';
+                    li.addEventListener("click", function (ev) {
+                        var btn = ev.target.closest("button");
+                        if (!btn) return;
+                        ev.stopPropagation();
+                        if (btn.dataset.op === "edit") openSiteModal(cat.id, idx);
+                        else deleteSite(cat.id, idx);
+                    });
+                    ul.appendChild(li);
+                });
+            }
+
+            function renderAdminEngines() {
+                var ul = $("adminEngineList");
+                ul.innerHTML = "";
+                data.engines.forEach(function (en, idx) {
+                    var li = document.createElement("li");
+                    li.innerHTML =
+                        '<span class="al-name">' + esc(en.name) + '</span>' +
+                        '<span class="al-sub">' + esc(en.url) + '</span>' +
+                        '<span class="al-ops">' +
+                        '<button data-op="edit" title="编辑">✎</button>' +
+                        '<button data-op="del" class="del" title="删除">✕</button>' +
+                        '</span>';
+                    li.addEventListener("click", function (ev) {
+                        var btn = ev.target.closest("button");
+                        if (!btn) return;
+                        ev.stopPropagation();
+                        if (btn.dataset.op === "edit") openEngineModal(idx);
+                        else deleteEngine(idx);
+                    });
+                    ul.appendChild(li);
+                });
+            }
+
+            function renderAdminLists() {
+                renderAdminCats();
+                renderAdminSites();
+                renderAdminEngines();
+                renderAdminSite();
+            }
+
+            /* 站点设置管理列表（名称/版权输入框回填 + 导航菜单项） */
+            function renderAdminSite() {
+                $("siteNameInput").value = data.site.name || "";
+                var cp = data.site.copyright || {};
+                $("cpYearInput").value = cp.year || "";
+                $("cpUrlInput").value = cp.url || "";
+                $("cpTailInput").value = cp.tail || "";
+                var ul = $("adminNavList");
+                ul.innerHTML = "";
+                (data.nav.items || []).forEach(function (item, idx) {
+                    var li = document.createElement("li");
+                    li.innerHTML =
+                        '<span class="al-name" style="flex:none;width:72px;">' + esc(item.name) + '</span>' +
+                        '<span class="al-sub">' + esc(item.url) + '</span>' +
+                        '<span class="al-ops">' +
+                        '<button data-op="up" title="上移">↑</button>' +
+                        '<button data-op="down" title="下移">↓</button>' +
+                        '<button data-op="edit" title="编辑">✎</button>' +
+                        '<button data-op="del" class="del" title="删除">✕</button>' +
+                        '</span>';
+                    li.addEventListener("click", function (ev) {
+                        var btn = ev.target.closest("button");
+                        if (!btn) return;
+                        ev.stopPropagation();
+                        var op = btn.dataset.op;
+                        if (op === "edit") openNavModal(idx);
+                        else if (op === "del") deleteNavItem(idx);
+                        else if (op === "up") moveNavItem(idx, -1);
+                        else if (op === "down") moveNavItem(idx, 1);
+                    });
+                    ul.appendChild(li);
+                });
+            }
+
+            /* ---------- 管理面板：页签切换 ---------- */
+            document.querySelectorAll(".admin-tab").forEach(function (tab) {
+                tab.addEventListener("click", function () {
+                    document.querySelectorAll(".admin-tab").forEach(function (t) { t.classList.remove("active"); });
+                    tab.classList.add("active");
+                    document.querySelectorAll(".admin-pane").forEach(function (p) { p.classList.remove("show"); });
+                    $(tab.dataset.tab).classList.add("show");
+                });
+            });
+
+            /* ---------- 修改密码 ---------- */
+            function changePass() {
+                var oldP = $("oldPass").value;
+                var p1 = $("newPass").value;
+                var p2 = $("newPass2").value;
+                if (hashPass(oldP) !== admin.pass) { toast("原密码不正确"); return; }
+                if (p1.length < 4) { toast("新密码至少 4 位"); return; }
+                if (p1 !== p2) { toast("两次输入的新密码不一致"); return; }
+                admin.pass = hashPass(p1);
+                try {
+                    localStorage.setItem(ADMIN_KEY, JSON.stringify(admin));
+                } catch (e) {
+                    toast("保存失败");
+                    return;
+                }
+                $("oldPass").value = "";
+                $("newPass").value = "";
+                $("newPass2").value = "";
+                toast("密码修改成功");
+            }
+
+            /* ---------- 导入 / 导出 / 恢复默认 ---------- */
+            function exportData() {
+                var blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+                var a = document.createElement("a");
+                a.href = URL.createObjectURL(blob);
+                a.download = "yingyin-nav-backup.json";
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
+                toast("数据已导出");
+            }
+
+            function importData(file) {
+                var reader = new FileReader();
+                reader.onload = function () {
+                    try {
+                        var d = JSON.parse(reader.result);
+                        if (!d || !Array.isArray(d.engines) || !Array.isArray(d.categories) || !d.categories.length) {
+                            toast("文件格式不正确");
+                            return;
+                        }
+                        if (!confirm("导入将覆盖当前所有数据，确定继续吗？")) return;
+                        d.categories.forEach(function (c) { if (!Array.isArray(c.sites)) c.sites = []; });
+                        if (!d.nav || typeof d.nav !== "object" || !Array.isArray(d.nav.items)) {
+                            d.nav = defaultData().nav;
+                        }
+                        if (!d.site || typeof d.site !== "object" || !d.site.name) {
+                            d.site = defaultData().site;
+                        }
+                        if (!d.site.copyright || typeof d.site.copyright !== "object") {
+                            d.site.copyright = defaultData().site.copyright;
+                        }
+                        data = d;
+                        saveData();
+                        currentCat = data.categories[0].id;
+                        adminSelCat = currentCat;
+                        renderAll();
+                        renderAdminLists();
+                        toast("数据导入成功");
+                    } catch (e) {
+                        toast("导入失败：不是有效的 JSON 文件");
+                    }
+                };
+                reader.readAsText(file);
+            }
+
+            function restoreDefault() {
+                if (!confirm("确定恢复为默认数据吗？当前所有修改将被清除！")) return;
+                data = defaultData();
+                saveData();
+                currentCat = data.categories[0].id;
+                adminSelCat = currentCat;
+                renderAll();
+                renderAdminLists();
+                toast("已恢复默认数据");
+            }
+
+            /* ---------- 事件绑定 ---------- */
+            // 分类切换（事件委托，兼容动态生成的标签）
+            $("category-list").addEventListener("click", function (ev) {
+                var tag = ev.target.closest(".category-tag");
+                if (!tag) return;
+                var cat = getCat(tag.getAttribute("data-catid")) || getCatByName(tag.getAttribute("data-category"));
+                if (!cat) return;
+                currentCat = cat.id;
+                renderCategories();
+                renderSites();
+            });
+
+            function getCatByName(name) {
+                for (var i = 0; i < data.categories.length; i++) {
+                    if (data.categories[i].name === name) return data.categories[i];
+                }
+                return null;
+            }
+
+            // 搜索
+            function performSearch() {
+                var inp = $("search-input");
+                var q = inp.value.trim();
+                if (!q) { inp.focus(); return; }
+                window.open($("search-engine").value + encodeURIComponent(q), "_blank");
+            }
+            $("search-btn").addEventListener("click", performSearch);
+            $("search-input").addEventListener("keypress", function (e) {
+                if (e.key === "Enter") performSearch();
+            });
+
+            // 刷新按钮
+            $("navRefresh").addEventListener("click", function () { location.reload(); });
+
+            // 登录 / 退出
+            $("navLogin").addEventListener("click", function () {
+                $("loginUser").value = "";
+                $("loginPass").value = "";
+                openModal($("loginMask"));
+                setTimeout(function () { $("loginUser").focus(); }, 50);
+            });
+            $("loginOk").addEventListener("click", doLogin);
+            $("loginCancel").addEventListener("click", function () { closeModal($("loginMask")); });
+            $("loginPass").addEventListener("keypress", function (e) {
+                if (e.key === "Enter") doLogin();
+            });
+            $("navLogout").addEventListener("click", doLogout);
+
+            // 管理面板
+            $("navManage").addEventListener("click", function () {
+                adminSelCat = currentCat;
+                renderAdminLists();
+                openModal($("adminMask"));
+            });
+            $("btnCloseAdmin").addEventListener("click", function () { closeModal($("adminMask")); });
+
+            // 网站弹窗
+            $("btnAddSite").addEventListener("click", function () { openSiteModal(adminSelCat || currentCat, -1); });
+            $("sfSave").addEventListener("click", saveSite);
+            $("sfCancel").addEventListener("click", function () { closeModal($("siteMask")); });
+
+            // 分类弹窗
+            $("btnAddCat").addEventListener("click", function () { openCatModal(null); });
+            $("cfSave").addEventListener("click", saveCat);
+            $("cfCancel").addEventListener("click", function () { closeModal($("catMask")); });
+
+            // 搜索引擎弹窗
+            $("btnAddEngine").addEventListener("click", function () { openEngineModal(-1); });
+            $("efSave").addEventListener("click", saveEngine);
+            $("efCancel").addEventListener("click", function () { closeModal($("engineMask")); });
+
+            // 站点设置（名称 + 版权 + 导航菜单项）
+            $("btnSaveSiteName").addEventListener("click", saveSiteName);
+            $("btnSaveCopyright").addEventListener("click", saveCopyright);
+            $("btnAddNav").addEventListener("click", function () { openNavModal(-1); });
+            $("nfSave").addEventListener("click", saveNavItem);
+            $("nfCancel").addEventListener("click", function () { closeModal($("navMask")); });
+
+            // 密码 / 数据
+            $("btnChangePass").addEventListener("click", changePass);
+            $("btnExport").addEventListener("click", exportData);
+            $("btnImport").addEventListener("click", function () { $("importFile").click(); });
+            $("importFile").addEventListener("change", function () {
+                if (this.files && this.files[0]) importData(this.files[0]);
+                this.value = "";
+            });
+            $("btnRestore").addEventListener("click", restoreDefault);
+
+            /* ---------- 初始化 ---------- */
+            renderAll();
+            refreshLoginUI();
+        })();
+    </script>
+</body>
+</html>
